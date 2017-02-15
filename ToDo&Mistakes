@@ -1,0 +1,6 @@
+TODO
+  Vaildation
+  Logging Exceptions
+  CharSequences to variables
+Mistakes
+  При определенном запросе на поиск одна и та же новость может вывестись несколько раз 
