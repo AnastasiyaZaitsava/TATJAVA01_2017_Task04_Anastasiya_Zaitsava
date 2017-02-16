@@ -1,6 +1,7 @@
 package com.epam.catalog.dao.impl;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -15,47 +16,66 @@ import com.epam.catalog.dao.exception.DAOException;
 import com.epam.catalog.util.Util;
 
 public class SQLFilmDAO implements FilmDAO{
+	private final static String INSERT_FILM = "INSERT INTO catalogdb.film (`idFilm`, `FilmName`,"
+					+ " `NewsTitle`, `NewsText`, `NewsDate`) VALUES(?,?,?,?,?)";
+	private final static String INSERT_GENRE ="INSERT INTO genres(`idGenre`, `GenreName`) VALUES (?,?)";
+	private final static String INSERT_ACTOR ="INSERT INTO actors(`idActor`, `ActorsName`) VALUES (?,?)";
 
+	private final static String INSERT_FILM_GENRE ="INSERT INTO filmgenre(`idFilmGenre`,"
+						+ "`idFilm`,`idGenre`) VALUES(?,?,?)";
+	private final static String INSERT_FILM_ACTOR ="INSERT INTO actfilm (`idActFilm`,"
+						+ "`idFilm`,`idActor`) VALUES(?,?,?)";
 	@Override
 	public void addFilm(Film film) throws DAOException {
 		ConnectionPool pool = ConnectionPool.getInstance();
 		Util util = new Util();
 		try {
 			pool.initPoolData();
+			
 			Connection con = pool.takeConnection();
-			Statement st = null; 
-			st = con.createStatement();
-			int filmID = util.getNewID(st, "film");
-			int affRows = st.executeUpdate("INSERT INTO catalogdb.film (`idFilm`, `FilmName`,"
-					+ " `NewsTitle`, `NewsText`, `NewsDate`) "
-					+ "VALUES ('" + filmID  + "', '" + film.getName()+ "', '" 
-					+ film.getNews().getTitle() + "','" + film.getNews().getText() 
-					+ "','" + film.getNews().getDate() +"')");
-			int genreID;
+			String filmID = util.getNewID(con, "film");
+			PreparedStatement ps = con.prepareStatement(INSERT_FILM);
+			ps.setString(1, filmID);
+			ps.setString(2, film.getName());
+            ps.setString(3, film.getNews().getTitle());
+            ps.setString(4, film.getNews().getText());
+            ps.setString(5, film.getNews().getDate());
+			ps.executeUpdate();
+			Statement st = con.createStatement(); 
+			int affRows;
+			String genreID;
 			for(String genre: film.getGenres()){
 				genreID = util.getIDifExists(st, "genres", "GenreName", genre);
-				if (genreID == 0){
-					genreID = util.getNewID(st, "genres");
-					affRows = st.executeUpdate("INSERT INTO catalogdb.genres (`idGenre`, "
-							+ "`GenreName`) VALUES ('" + genreID + "', '" + genre +"')");
+				if (genreID.equals("0")){
+					genreID = util.getNewID(con, "genres");
+					ps = con.prepareStatement(INSERT_GENRE);
+					ps.setString(1, genreID);
+					ps.setString(2, genre);
+					ps.executeUpdate();
 				}
 				
-				affRows = st.executeUpdate("INSERT INTO catalogdb.filmgenre (`idFilmGenre`,"
-						+ "`idFilm`,`idGenre`) VALUES('" + util.getNewID(st, "filmgenre") + "','"
-						+ filmID + "', '" + genreID + "')");
+				ps = con.prepareStatement(INSERT_FILM_GENRE);
+				ps.setString(1, util.getNewID(con, "filmgenre"));
+				ps.setString(2, filmID);
+				ps.setString(3, genreID);
+				ps.executeUpdate();
 			}
-			int actorID;
+			String actorID;
 			for(String actor: film.getActors()){
 				actorID = util.getIDifExists(st, "actors", "ActorsName", actor);
-				if (actorID == 0){
-					actorID = util.getNewID(st, "actors");
-					affRows = st.executeUpdate("INSERT INTO catalogdb.actors (`idActor`, "
-							+ "`ActorsName`) VALUES ('" + actorID + "', '" + actor +"')");
+				if (actorID.equals("0")){
+					actorID = util.getNewID(con, "actors");
+					ps = con.prepareStatement(INSERT_ACTOR);
+					ps.setString(1, String.valueOf(actorID));
+					ps.setString(2, actor);
+					ps.executeUpdate();
 				}
 				
-				affRows = st.executeUpdate("INSERT INTO catalogdb.actfilm (`idActFilm`,"
-						+ "`idFilm`,`idActor`) VALUES('" + util.getNewID(st, "actfilm") + "','"
-						+ filmID + "', '" + actorID + "')");
+				ps = con.prepareStatement(INSERT_FILM_ACTOR);
+				ps.setString(1, util.getNewID(con, "actfilm"));
+				ps.setString(2, filmID);
+				ps.setString(3, actorID);
+				ps.executeUpdate();
 			}
 			
 			
@@ -151,6 +171,7 @@ public class SQLFilmDAO implements FilmDAO{
 
 		} catch (ConnectionPoolException | SQLException e) {
 			// TODO logging
+
 			throw new DAOException();
 		} finally{	
 			pool.closeConnection(con, st, rs);

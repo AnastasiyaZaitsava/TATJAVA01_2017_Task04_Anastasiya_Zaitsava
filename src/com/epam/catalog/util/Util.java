@@ -1,5 +1,6 @@
 package com.epam.catalog.util;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -84,36 +85,37 @@ public class Util {
 		
 	}
 	
-	public int getIDifExists(Statement st, String tableName, String column, String parameter){
+	public String getIDifExists(Statement st, String tableName, String column, String parameter){
 		try {
 			ResultSet rs = st.executeQuery("select * from `"+ tableName +"` where " 
 											+ column + "= '" + parameter +"'");
 			if (rs.next()){
-				int id = rs.getInt(1);
+				String id = rs.getString(1);
 				return id;
 			}
 			else{
 				rs.close();
-				return 0;
+				return "0";
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-			return 0;
+			return "0";
 		}
 		
 	}
 	
-	public int getNewID(Statement st, String tableName){
-		ResultSet rs;
+	public String getNewID(Connection con, String tableName){
 		try {
-			rs = st.executeQuery("SELECT * FROM " + tableName);
+			Statement st = con.createStatement();
+			ResultSet rs = st.executeQuery("SELECT * FROM " + tableName);
 			rs.last();
-			int nextRow = rs.getRow() + 1;
+			int nextRow = rs.getInt(1) + 1;
 			rs.close();
-			return nextRow;
+			st.close();
+			return String.valueOf(nextRow);
 		} catch (SQLException e) {
 			e.printStackTrace();
-			return 0;
+			return "0";
 		}
 	}
 	

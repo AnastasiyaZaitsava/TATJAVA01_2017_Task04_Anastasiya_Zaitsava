@@ -1,6 +1,7 @@
 package com.epam.catalog.dao.impl;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -16,6 +17,15 @@ import com.epam.catalog.util.Util;
 
 public class SQLBookDAO implements BookDAO {
 
+	private final static String INSERT_BOOK = "INSERT INTO catalogdb.book (`idBook`, `BookName`,"
+			+ " `NewsTitle`, `NewsText`, `NewsDate`) VALUES(?,?,?,?,?)";
+	private final static String INSERT_GENRE ="INSERT INTO genres(`idGenre`, `GenreName`) VALUES (?,?)";
+	private final static String INSERT_AUTHOR ="INSERT INTO author(`idAuthor`, `AuthorsName`) VALUES (?,?)";
+	private final static String INSERT_BOOK_GENRE ="INSERT INTO bookgenre(`idBookGenre`,"
+				+ "`idBook`,`idGenre`) VALUES(?,?,?)";
+	private final static String INSERT_BOOK_AUTHOR ="INSERT INTO authbook (`idAuthBook`,"
+				+ "`idBook`,`idAuthor`) VALUES(?,?,?)";
+	
 	public void addBook(Book book) throws DAOException {
 		ConnectionPool pool = ConnectionPool.getInstance();
 		Util util = new Util();
@@ -24,42 +34,54 @@ public class SQLBookDAO implements BookDAO {
 			Connection con = pool.takeConnection();
 			Statement st = null; 
 			st = con.createStatement();
-			int bookID = util.getNewID(st, "book");
-			int affRows = st.executeUpdate("INSERT INTO catalogdb.book (`idBook`, `BookName`,"
-					+ " `NewsTitle`, `NewsText`, `NewsDate`) "
-					+ "VALUES ('" + bookID  + "', '" + book.getName()+ "', '" 
-					+ book.getNews().getTitle() + "','" + book.getNews().getText() 
-					+ "','" + book.getNews().getDate() +"')");
-			int genreID;
+			PreparedStatement ps = con.prepareStatement(INSERT_BOOK);
+			String bookID = util.getNewID(con, "book");
+			ps.setString(1, bookID);
+			ps.setString(2, book.getName());
+            ps.setString(3, book.getNews().getTitle());
+            ps.setString(4, book.getNews().getText());
+            ps.setString(5, book.getNews().getDate());
+			ps.executeUpdate();
+		
+			String genreID;
 			for(String genre: book.getGenres()){
 				genreID = util.getIDifExists(st, "genres", "GenreName", genre);
-				if (genreID == 0){
-					genreID = util.getNewID(st, "genres");
-					affRows = st.executeUpdate("INSERT INTO catalogdb.genres (`idGenre`, "
-							+ "`GenreName`) VALUES ('" + genreID + "', '" + genre +"')");
+				if (genreID.equals("0")){
+					genreID = util.getNewID(con, "genres");
+					ps = con.prepareStatement(INSERT_GENRE);
+					ps.setString(1, genreID);
+					ps.setString(2, genre);
+					ps.executeUpdate();
 				}
 				
-				affRows = st.executeUpdate("INSERT INTO catalogdb.bookgenre (`idBookGenre`,"
-						+ "`idBook`,`idGenre`) VALUES('" + util.getNewID(st, "bookgenre") + "','"
-						+ bookID + "', '" + genreID + "')");
+				ps = con.prepareStatement(INSERT_BOOK_GENRE);
+				ps.setString(1, util.getNewID(con, "bookgenre"));
+				ps.setString(2, bookID);
+				ps.setString(3, genreID);
+				ps.executeUpdate();
 			}
-			int authorID;
+			String authorID;
 			for(String author: book.getAuthors()){
 				authorID = util.getIDifExists(st, "author", "AuthorsName", author);
-				if (authorID == 0){
-					authorID = util.getNewID(st, "author");
-					affRows = st.executeUpdate("INSERT INTO catalogdb.author (`idAuthor`, "
-							+ "`AuthorsName`) VALUES ('" + authorID + "', '" + author +"')");
+				if (authorID.equals("0")){
+					authorID = util.getNewID(con, "author");
+					ps = con.prepareStatement(INSERT_AUTHOR);
+					ps.setString(1, authorID);
+					ps.setString(2, author);
+					ps.executeUpdate();
 				}
 				
-				affRows = st.executeUpdate("INSERT INTO catalogdb.authbook (`idAuthBook`,"
-						+ "`idBook`,`idAuthor`) VALUES('" + util.getNewID(st, "authbook") + "','"
-						+ bookID + "', '" + authorID + "')");
+				ps = con.prepareStatement(INSERT_BOOK_AUTHOR);
+				ps.setString(1, util.getNewID(con, "authbook"));
+				ps.setString(2, bookID);
+				ps.setString(3, authorID);
+				ps.executeUpdate();
 			}
 			
 			
 		} catch (ConnectionPoolException | SQLException e) {
 			// TODO logging
+			e.printStackTrace();
 			throw new DAOException();
 		}
 		

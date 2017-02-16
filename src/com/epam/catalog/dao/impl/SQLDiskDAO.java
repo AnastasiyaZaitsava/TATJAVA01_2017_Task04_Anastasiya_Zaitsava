@@ -1,6 +1,7 @@
 package com.epam.catalog.dao.impl;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -12,36 +13,36 @@ import com.epam.catalog.dao.DiskDAO;
 import com.epam.catalog.dao.connection.ConnectionPool;
 import com.epam.catalog.dao.connection.ConnectionPoolException;
 import com.epam.catalog.dao.exception.DAOException;
+import com.epam.catalog.util.Util;
 
 
 public class SQLDiskDAO implements DiskDAO{
 	
-
+	private final static String INSERT_DISK = "INSERT INTO catalogdb.disk (`idDisk`, `DiskName`,"
+			+ " `Content`, `Producer`, `NewsTitle`, `NewsText`, `NewsDate`) VALUES(?,?,?,?,?,?,?)";
 	@Override
 	public void addDisk(Disk disk) throws DAOException {
 		ConnectionPool pool = ConnectionPool.getInstance();
+		Util util = new Util();
 		Connection con = null;
-		Statement st = null; 
-		ResultSet rs = null;
 		try {
 			pool.initPoolData();
 			con = pool.takeConnection();
-			st = con.createStatement();
-			rs = st.executeQuery("SELECT * FROM Disk");
-			rs.last();
-			int nextRow = rs.getRow()+1;
-			int affRows = st.executeUpdate("INSERT INTO catalogdb.disk(`idDisk`, `DiskName`, `Content`, "
-					+ "`Producer`, `NewsTitle`, `NewsText`, `NewsDate`) "
-					+ "VALUES ('" + nextRow + "', '" + disk.getName()+ "', '" +
-					disk.getContent() + "', '" + disk.getProducer() + "','" + disk.getNews().getTitle() 
-					+ "','" + disk.getNews().getText() + "','" + disk.getNews().getDate() +"')");
+			PreparedStatement ps = con.prepareStatement(INSERT_DISK);
+			String diskID = util.getNewID(con, "disk");
+			ps.setString(1, diskID);
+			ps.setString(2, disk.getName());
+			ps.setString(3, disk.getContent());
+			ps.setString(4, disk.getProducer());
+            ps.setString(5, disk.getNews().getTitle());
+            ps.setString(6, disk.getNews().getText());
+            ps.setString(7, disk.getNews().getDate());
+			ps.executeUpdate();
 			
 		} catch (ConnectionPoolException | SQLException e) {
 			// TODO logging
 			throw new DAOException();
-		} finally{
-			pool.closeConnection(con, st, rs);
-		}
+		} 
 	}
 
 	@Override
