@@ -5,6 +5,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collections;
 
 import com.epam.catalog.bean.Book;
 import com.epam.catalog.bean.Disk;
@@ -78,9 +79,7 @@ public class Util {
 	public ArrayList<String> parseAndConvert(String exp, String regex){ 	//parse string and convert it to ArrayList
 		String[] parsedExp = exp.split(regex);
 		ArrayList<String> list = new ArrayList<String>();
-		for(int i=0; i<parsedExp.length; i++){
-			list.add(parsedExp[i]);
-		}
+		Collections.addAll(list, parsedExp);
 		return list;
 		
 	}
