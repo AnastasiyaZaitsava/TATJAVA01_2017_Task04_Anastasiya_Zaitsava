@@ -33,5 +33,34 @@ public class Disk {
 		return this.news;
 	}
 	
+	public boolean equals(Object obj){
+		if (this == obj) {
+			return true;
+		}
+		
+		if (null == obj) {
+			return false;
+		}
+
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		
+		Disk disk = (Disk) obj;
+		if (!name.equals(disk.name)){
+			return false;
+		}
+		if (!content.equals(disk.content)){
+			return false;
+		}
+		if (!producer.equals(disk.producer)){
+			return false;
+		}
+		
+		if(!news.equals(disk.news)){
+			return false;
+		}
+		return true;
+	}
 
 }

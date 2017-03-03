@@ -34,5 +34,35 @@ public class Film {
 		return this.news;
 	}
 	
+	public boolean equals(Object obj){
+		if (this == obj) {
+			return true;
+		}
+		
+		if (null == obj) {
+			return false;
+		}
+
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		
+		Film film = (Film) obj;
+		if (!name.equals(film.name)){
+			return false;
+		}
+		if(!actors.containsAll(film.actors) || !film.actors.containsAll(actors)){
+			return false;
+		}
+		
+		if(!genres.containsAll(film.genres) || !film.genres.containsAll(genres)){
+			return false;
+		}
+		
+		if(!news.equals(film.news)){
+			return false;
+		}
+		return true;
+	}
 	
 }

@@ -23,4 +23,30 @@ public class News {
 	public String getDate(){
 		return this.date;
 	}
+	
+	public boolean equals(Object obj){
+		if (this == obj) {
+			return true;
+		}
+		
+		if (null == obj) {
+			return false;
+		}
+
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		
+		News news = (News) obj;
+		if (!title.equals(news.title)){
+			return false;
+		}
+		if (!text.equals(news.text)){
+			return false;
+		}
+		if (!date.equals(news.date)){
+			return false;
+		}
+		return true;
+	}
 }

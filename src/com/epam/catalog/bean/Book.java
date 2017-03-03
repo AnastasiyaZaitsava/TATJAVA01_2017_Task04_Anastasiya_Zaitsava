@@ -2,6 +2,7 @@ package com.epam.catalog.bean;
 
 import java.util.ArrayList;
 
+
 public class Book {
 	
 	private String name;
@@ -33,6 +34,37 @@ public class Book {
 	}
 	public News getNews(){
 		return this.news;
+	}
+	
+	public boolean equals(Object obj){
+		if (this == obj) {
+			return true;
+		}
+		
+		if (null == obj) {
+			return false;
+		}
+
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		
+		Book book = (Book) obj;
+		if (!name.equals(book.name)){
+			return false;
+		}
+		if(!authors.containsAll(book.authors) || !book.authors.containsAll(authors)){
+			return false;
+		}
+		
+		if(!genres.containsAll(book.genres) || !book.genres.containsAll(genres)){
+			return false;
+		}
+		
+		if(!news.equals(book.news)){
+			return false;
+		}
+		return true;
 	}
 	
 	
